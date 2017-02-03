@@ -1,0 +1,11 @@
+language: objective-c
+
+osx_image: xcode8.2
+
+before_install: gem install bundler -v 1.14.3
+
+rvm:
+  - 2.3.3
+
+script:
+  - bundle exec rake
