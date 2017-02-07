@@ -18,7 +18,7 @@ the code generators ruby package.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'graphql_swift_gen', path: 'graphql_java_gen'
+gem 'graphql_swift_gen', path: 'graphql_swift_gen'
 ```
 
 And then execute:
