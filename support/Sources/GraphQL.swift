@@ -194,12 +194,69 @@ public class GraphQL {
 		}
 	}
 
+	public struct ResponseError {
+		public let message: String
+		public let fields: [String: AnyObject]
+	}
+
 	public enum ChildObjectType {
 		case Scalar
 		case Object
 		case ObjectList
 		case ScalarList
 		case Unknown
+	}
+
+	public struct ViolationError: Error {
+		public let response: Any
+	}
+
+	public struct JsonParsingError: Error {
+		public let input: Data
+	}
+}
+
+public struct GraphQLResponse<DataType: GraphQL.AbstractResponse> {
+	public let data: DataType?
+	public let errors: [GraphQL.ResponseError]?
+
+	public init(object: Any) throws {
+		guard let rootDict = object as? [String: AnyObject] else {
+			throw GraphQL.ViolationError(response: object)
+		}
+
+		if let data = rootDict["data"] {
+			guard let data = data as? [String: AnyObject] else {
+				throw GraphQL.ViolationError(response: object)
+			}
+			self.data = try DataType(fields: data)
+		} else {
+			self.data = nil
+		}
+		if let errors = rootDict["errors"] {
+			guard let errors = errors as? [[String: AnyObject]] else {
+				throw GraphQL.ViolationError(response: object)
+			}
+			self.errors = try errors.map { fields in
+				guard let message = fields["message"] as? String else {
+					throw GraphQL.ViolationError(response: object)
+				}
+				return GraphQL.ResponseError(message: message, fields: fields)
+			}
+		} else {
+			self.errors = nil
+		}
+		if self.data == nil && self.errors == nil {
+			throw GraphQL.ViolationError(response: object)
+		}
+	}
+
+	public init(jsonData: Data) throws {
+		let options = JSONSerialization.ReadingOptions(rawValue: 0)
+		guard let responseObj = try? JSONSerialization.jsonObject(with: jsonData, options: options) else {
+			throw GraphQL.JsonParsingError(input: jsonData)
+		}
+		try self.init(object: responseObj)
 	}
 }
 
