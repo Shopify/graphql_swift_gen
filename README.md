@@ -10,7 +10,7 @@ The code generator requires ruby version 2.1 or later.
 Until this project is released, it is recommended to include it into
 a project as a git submodule.
 
-    $ git submodule git@github.com:Shopify/graphql_swift_gen.git
+    $ git submodule https://github.com/Shopify/graphql_swift_gen.git
 
 It is recommended to use [bundler](http://bundler.io/) to install
 the code generators ruby package.
