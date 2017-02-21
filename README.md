@@ -73,29 +73,16 @@ and provide methods for accessing the field data with it already coerced to the
 correct type.
 
 ```swift
-guard let responseObj = try? JSONSerialization.jsonObject(with: responseData, options: JSONSerialization.ReadingOptions(rawValue: 0)) else {
-    print("Invalid JSON in GraphQL response")
-    return
-}
-var errors = nil
-var data = nil
-if let responseDict = responseObj as? [String: AnyObject] {
-    if let responseDict = responseObj as? [String: AnyObject] {
-        errors = responseDict?["errors"] as? [[String: AnyObject]]
-        data = responseDict?["data"] as? [String: AnyObject]
-    }
-}
-if graphData == nil && graphErrors == nil {
+guard let response = try? GraphQLResponse<ExampleSchema.QueryRoot>(jsonData: response) else {
     print("Invalid GraphQL response")
     return
 }
-if let errors = errors {
+if let errors = response.errors {
     for error in errors {
-        message = error["message"] as? String ?? "Unknown error"
-        print("GraphQL error: \(message)")
+        print("GraphQL error: \(error.message)")
     }
 }
-if let data = data {
+if let data = response.data {
     let user = data.user
     print("\(user.firstName) \(user.lastName)")
 }
