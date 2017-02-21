@@ -1,4 +1,5 @@
 # GraphQLSwiftGen
+[![Build Status](https://travis-ci.org/Shopify/graphql_swift_gen.svg?branch=master)](https://travis-ci.org/Shopify/graphql_swift_gen)
 
 Generate swift code for any specific GraphQL schema that provides
 query builders and response classes.
