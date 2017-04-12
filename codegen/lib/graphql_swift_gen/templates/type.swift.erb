@@ -19,7 +19,9 @@ import Foundation
 
 extension <%= schema_name %> {
   <% case type.kind; when 'OBJECT', 'INTERFACE', 'UNION' %>
-    open class <%= type.name %>Query: GraphQL.AbstractQuery {
+    open class <%= type.name %>Query: GraphQL.AbstractQuery, GraphQLQuery {
+      public typealias Response = <%= type.name %>
+
       <% if type.name == schema.mutation_root_name %>
         open override var description: String {
           return "mutation" + super.description
@@ -74,8 +76,9 @@ extension <%= schema_name %> {
 
     <% class_name = type.object? ? type.name : "Unknown#{type.name}" %>
     <% protocols = type.object? ? type.interfaces.map { |iface| ", #{iface.name}" }.join : ", #{type.name}" %>
-    open class <%= class_name %>: GraphQL.AbstractResponse<%= protocols %>
-    {
+    open class <%= class_name %>: GraphQL.AbstractResponse, GraphQLObject<%= protocols %> {
+      public typealias Query = <%= type.name %>Query
+
       open override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
         let fieldValue = value
         switch fieldName {
