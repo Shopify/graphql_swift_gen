@@ -260,6 +260,14 @@ public struct GraphQLResponse<DataType: GraphQL.AbstractResponse> {
 	}
 }
 
+public protocol GraphQLQuery {
+	associatedtype Response
+}
+
+public protocol GraphQLObject {
+	associatedtype Query
+}
+
 public struct SchemaViolationError: Error {
 	let type: GraphQL.AbstractResponse.Type
 	let field: String
