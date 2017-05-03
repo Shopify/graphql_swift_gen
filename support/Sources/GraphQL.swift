@@ -98,7 +98,7 @@ public class GraphQL {
 			}
 		}
 
-		public func addField(field: String, aliasSuffix: String? = nil, args: String? = nil, subfields: AbstractQuery? = nil) {
+		internal func addField(field: String, aliasSuffix: String? = nil, args: String? = nil, subfields: AbstractQuery? = nil) {
 			var alias: String? = nil
 			if let aliasSuffix = aliasSuffix {
 				alias = "\(field)\(AbstractQuery.aliasSuffixSeparator)\(aliasSuffix)"
@@ -106,12 +106,12 @@ public class GraphQL {
 			addSelection(selection: Selection(field: field, alias: alias, args: args, subfields: subfields))
 		}
 
-		public func addInlineFragment(on object: String, subfields: AbstractQuery) {
+		internal func addInlineFragment(on object: String, subfields: AbstractQuery) {
 			addSelection(selection: Selection(field: "... on \(object)", alias: nil, args: nil, subfields: subfields))
 		}
 	}
 
-	public static func quoteString(input: String) -> String {
+	internal static func quoteString(input: String) -> String {
 		var escaped = "\""
 		for c in input.unicodeScalars {
 			switch c {
@@ -137,7 +137,7 @@ public class GraphQL {
 
 	open class AbstractResponse: CustomDebugStringConvertible {
 		public var fields: [String: Any]
-		public var objectMap: [String : Any?] = [:]
+		internal var objectMap: [String : Any?] = [:]
 
 		required public init(fields: [String: Any]) throws {
 			self.fields = fields
@@ -153,11 +153,11 @@ public class GraphQL {
 			}
 		}
 
-		open func deserializeValue(fieldName: String, value: Any) throws -> Any? {
+		internal func deserializeValue(fieldName: String, value: Any) throws -> Any? {
 			throw SchemaViolationError(type: type(of: self), field: fieldName, value: value)
 		}
 
-		public func field(field: String, aliasSuffix: String? = nil) -> Any? {
+		internal func field(field: String, aliasSuffix: String? = nil) -> Any? {
 			var responseKey = field
 			if let aliasSuffix = aliasSuffix {
 				responseKey += "\(AbstractQuery.aliasSuffixSeparator)\(aliasSuffix)"
@@ -172,19 +172,19 @@ public class GraphQL {
 			return "<\(type(of: self)): \(fields)>"
 		}
 
-		open func childObjectType(key: String) -> ChildObjectType {
+		internal func childObjectType(key: String) -> ChildObjectType {
 			return .unknown
 		}
 
-		open func fetchChildObject(key: String) -> GraphQL.AbstractResponse? {
+		internal func fetchChildObject(key: String) -> GraphQL.AbstractResponse? {
 			return nil
 		}
 
-		open func fetchChildObjectList(key: String) -> [GraphQL.AbstractResponse] {
+		internal func fetchChildObjectList(key: String) -> [GraphQL.AbstractResponse] {
 			return []
 		}
 
-		func fieldName(from key: String) -> String {
+		internal func fieldName(from key: String) -> String {
 			if let range = key.range(of: AbstractQuery.aliasSuffixSeparator) {
 				if key.distance(from: key.startIndex, to: range.lowerBound) > 0 {
 					return key.substring(to: range.lowerBound)
@@ -231,8 +231,8 @@ public class GraphQL {
 }
 
 public struct GraphQLResponse<DataType: GraphQL.AbstractResponse> {
-	public let data: DataType?
-	public let errors: [GraphQL.ResponseError]?
+	internal let data: DataType?
+	internal let errors: [GraphQL.ResponseError]?
 
 	public init(object: Any) throws {
 		guard let rootDict = object as? [String: AnyObject] else {
