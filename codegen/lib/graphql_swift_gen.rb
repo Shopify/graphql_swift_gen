@@ -218,9 +218,45 @@ class GraphQLSwiftGen
       raise NotImplementedError, "Unexpected #{type.kind} argument type"
     end
   end
-
+  
+  def generate_input_init(type) 
+    text = "public init("
+      input_fields = type.required_input_fields + type.optional_input_fields
+      input_fields.each do |field|
+        text << escape_reserved_word(field.camelize_name)
+        text << ": "
+        text << swift_input_type(field.type)
+        text << (field.type.non_null? ? "" : " = nil")
+        text << (field == input_fields.last ? "" : ", ")
+      end
+    text << ")"
+    text << " {\n"
+      type.input_fields.each do |field|
+        name = escape_reserved_word(field.camelize_name)
+        text << "self." + name + " = " + name
+        text << "\n"
+      end
+    text << "}"
+  end
+  
+  def remove_linebreaks(text)
+    text.gsub("\n", " ")
+  end
+  
+  def input_field_description(type)
+    unless type.input_fields.count == 0
+      text = "/// - parameters:" + ""
+      type.input_fields.each do |field|
+        description = (field.description.nil? ? "No description" : remove_linebreaks(field.description))
+        text << "\n///     - " + field.name + ": " + description
+      end
+      text << "\n///"
+      text
+    end
+  end
+  
   def swift_arg_defs(field)
-    defs = ["aliasSuffix: String? = nil"]
+    defs = ["alias: String? = nil"]
     field.args.each do |arg|
       arg_def = "#{escape_reserved_word(arg.name)}: #{swift_input_type(arg.type)}"
       arg_def << " = nil" unless arg.type.non_null?
@@ -242,9 +278,9 @@ class GraphQLSwiftGen
     end
     return "#{expr}.forEach {\n#{generate_append_objects_code('$0', type.of_type)}\n}" if type.list?
 
-    abstract_response = type.object? ? expr : "#{expr} as! GraphQL.AbstractResponse"
+    abstract_response = type.object? ? expr : "(#{expr} as! GraphQL.AbstractResponse)"
     "response.append(#{abstract_response})\n" \
-      "response.append(contentsOf: #{expr}.childResponseObjectMap())"
+      "response.append(contentsOf: #{abstract_response}.childResponseObjectMap())"
   end
 
   def swift_attributes(deprecatable)
@@ -252,6 +288,62 @@ class GraphQLSwiftGen
     if deprecatable.deprecation_reason
       message_argument = ", message:#{deprecatable.deprecation_reason.inspect}"
     end
-    "@available(*, deprecated#{message_argument})"
+    "@available(*, deprecated#{message_argument})\n"
+  end
+  
+  def swift_doc(element, include_args=true)
+    doc = ''
+  	
+    unless element.description.nil?
+      description = element.description
+      description = wrap_text(description, '/// ')
+      doc << "\n\n" + description
+    end
+    
+  	if include_args && element.respond_to?(:args)
+  	  if element.args.count > 0
+		doc << "\n///\n"
+		doc << "/// - parameters:"
+		element.args.each do |arg|	
+		  doc << "\n"
+		  doc << '///     - ' + arg.name + ': ' + (arg.description.nil? ? "No description" : format_arg_list(arg.description, 7))
+		end
+		doc << "\n///"
+  	  end
+  	end	
+    doc
+  end
+
+  def wrap_text(text, prefix, width=80)
+    container = ''
+    line = "" + prefix
+    
+    parts = text.split(" ")
+    parts.each do |part|
+      if line.length + part.length < width
+        line << part
+        line << ' '
+      else
+    	container << line
+    	container << "\n"
+    	line = "" + prefix
+    	line << part
+        line << ' '
+      end
+    end
+    
+    if line.length > 0
+      container << line
+    end
+    container
+  end
+
+  def format_arg_list(text, spacing)
+	parts = text.split("\n")    
+	commented = parts.drop(1).map do |part|
+	  "/// " + (" " * spacing) + part
+	end
+	commented.unshift(parts.first)
+	commented.join("\n")
   end
 end
