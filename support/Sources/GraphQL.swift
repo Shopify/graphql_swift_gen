@@ -192,6 +192,10 @@ public class GraphQL {
 			}
 			return key
 		}
+        
+        internal func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {
+            fatalError()
+        }
 	}
 
 	public struct ResponseError {
