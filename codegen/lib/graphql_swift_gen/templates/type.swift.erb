@@ -131,37 +131,41 @@ extension <%= schema_name %> {
 
       override open func childObjectType(key: String) -> GraphQL.ChildObjectType {
         switch(key) {
-          <% type.fields(include_deprecated: true).each do |field| %>
+        <% type.fields(include_deprecated: true).each do |field| %>
           case "<%= field.name %>":
-          <% if ['OBJECT', 'INTERFACE'].include?(field.type.unwrap_non_null.kind) %>
-              return .Object
-            <% elsif field.type.unwrap_non_null.kind == 'LIST' && ['OBJECT', 'INTERFACE'].include?(field.type.unwrap.kind) %>
-              return .ObjectList
-            <% elsif field.type.unwrap_non_null.kind == 'LIST' && field.type.unwrap.kind != 'OBJECT' %>
-              return .ScalarList
+          <% case field.type.unwrap_non_null.kind
+          when 'OBJECT', 'INTERFACE' %>
+            return .object
+          <% when 'LIST' %>
+            <% case field.type.unwrap.kind
+            when 'OBJECT', 'INTERFACE' %>
+            return .objectList
             <% else %>
-              return .Scalar
+            return .scalarList
             <% end %>
+          <% else %>
+            return .scalar
           <% end %>
+        <% end %>
           default:
-            return .Scalar
+            return .scalar
         }
       }
 
       override open func fetchChildObject(key: String) -> GraphQL.AbstractResponse? {
         switch(key) {
-          <% type.fields(include_deprecated: true).each do |field| %>
-            <% if field.type.unwrap_non_null.kind == 'OBJECT' %>
-                case "<%= field.name %>":
-                  return internalGet<%= field.classify_name %>()
-              <% elsif field.type.unwrap_non_null.kind == 'INTERFACE' %>
-                case "<%= field.name %>":
-                  return internalGet<%= field.classify_name %>()<%= field.type.non_null? ? '' : '?' %>.responseObject()
-              <% end %>
-            <% end %>
-            default:
-              break
-            }
+        <% type.fields(include_deprecated: true).each do |field| %>
+          <% if field.type.unwrap_non_null.kind == 'OBJECT' %>
+          case "<%= field.name %>":
+            return internalGet<%= field.classify_name %>()
+          <% elsif field.type.unwrap_non_null.kind == 'INTERFACE' %>
+          case "<%= field.name %>":
+            return internalGet<%= field.classify_name %>()<%= field.type.non_null? ? '' : '?' %>.responseObject()
+          <% end %>
+        <% end %>
+          default:
+            break
+        }
         return nil
       }
 
