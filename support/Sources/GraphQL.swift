@@ -173,7 +173,7 @@ public class GraphQL {
 		}
 
 		open func childObjectType(key: String) -> ChildObjectType {
-			return .Unknown
+			return .unknown
 		}
 
 		open func fetchChildObject(key: String) -> GraphQL.AbstractResponse? {
@@ -200,11 +200,25 @@ public class GraphQL {
 	}
 
 	public enum ChildObjectType {
-		case Scalar
-		case Object
-		case ObjectList
-		case ScalarList
-		case Unknown
+		case object
+		@available(*, deprecated, message:"Use .object")
+		public static let Object = object
+
+		case objectList
+		@available(*, deprecated, message:"Use .objectList")
+		public static let ObjectList = objectList
+
+		case scalar
+		@available(*, deprecated, message:"Use .scalar")
+		public static let Scalar = scalar
+
+		case scalarList
+		@available(*, deprecated, message:"Use .scalarList")
+		public static let ScalarList = scalarList
+
+		case unknown
+		@available(*, deprecated, message:"Use .unknown")
+		public static let Unknown = unknown
 	}
 
 	public struct ViolationError: Error {
@@ -281,12 +295,12 @@ public struct SchemaViolationError: Error {
 }
 
 extension GraphQL.Selection: Equatable {}
-public func==(lhs: GraphQL.Selection, rhs: GraphQL.Selection) -> Bool {
+public func ==(lhs: GraphQL.Selection, rhs: GraphQL.Selection) -> Bool {
 	return (lhs === rhs) || (lhs.field == rhs.field && lhs.alias == rhs.alias && lhs.args == rhs.args && lhs.subfields == rhs.subfields)
 }
 
 extension GraphQL.AbstractQuery: Equatable {}
-public func==(lhs: GraphQL.AbstractQuery, rhs: GraphQL.AbstractQuery) -> Bool {
+public func ==(lhs: GraphQL.AbstractQuery, rhs: GraphQL.AbstractQuery) -> Bool {
 	return (lhs === rhs) || (lhs.selections == rhs.selections)
 }
 
