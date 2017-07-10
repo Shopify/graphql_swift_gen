@@ -61,7 +61,7 @@ The generated code includes a query builder that can be used to
 create a GraphQL query in a type-safe mannar.
 
 ```swift
-let queryString = ExampleSchema.buildQuerya { $0
+let queryString = ExampleSchema.buildQuery { $0
     .user { $0
         .firstName()
         .lastName()

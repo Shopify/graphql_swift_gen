@@ -47,6 +47,9 @@ module Support
         deprecation_reason "Ambiguous, use string instead"
         argument :key, !types.String
       end
+      field :mget, !types[types.String] do
+        argument :keys, !types[!types.String]
+      end
       field :string, types.String do
         description "Get a string value with the given key"
         argument :key, !types.String
