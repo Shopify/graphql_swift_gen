@@ -206,8 +206,11 @@ class GraphQLSwiftGen
     when 'SCALAR'
       scalars[type.name].deserialize_expr(expr)
     when 'LIST'
-      rethrow = "try " if %w(OBJECT INTERFACE UNION).include?(type.unwrap.kind)
-      "#{rethrow}#{expr}.map { #{deserialize_value_code(field_name, '$0', type.of_type, untyped: !type.of_type.non_null?)} }"
+      untyped = !type.of_type.non_null?
+      rethrow = "try " if %w(OBJECT INTERFACE UNION).include?(type.unwrap.kind) || untyped
+      sub_statements = "#{rethrow}#{expr}.map { #{deserialize_value_code(field_name, '$0', type.of_type, untyped: untyped)} }"
+      sub_statements += " as [Any?]" if untyped
+      sub_statements
     when 'OBJECT'
       "try #{type.name}(fields: #{expr})"
     when 'INTERFACE', 'UNION'

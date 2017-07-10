@@ -17,6 +17,11 @@ class IntegrationTests: XCTestCase {
         XCTAssertEqual(String(describing: query), "{keys(first:10,after:\"cursor\")}")
     }
 
+    func testArrayArgQuery() {
+        let query = Generated.buildQuery { $0.mget(keys: ["one", "two"]) }
+        XCTAssertEqual(String(describing: query), "{mget(keys:[\"one\",\"two\"])}")
+    }
+
     func testInterfaceQuery() {
         let query = Generated.buildQuery { $0
             .entry(key: "user:1") { $0
@@ -63,6 +68,12 @@ class IntegrationTests: XCTestCase {
     func testStringFieldResponse() {
         let data = queryData(json: "{\"data\":{\"version\":\"1.2.3\"}}")
         XCTAssertEqual(data.version, "1.2.3")
+    }
+
+    func testOptionalArrayResponse() {
+        let data = queryData(json: "{\"data\":{\"mget\":[\"one\", null]}}")
+        XCTAssertEqual(data.mget[0], "one")
+        XCTAssertNil(data.mget[1])
     }
 
     func testStringListResponse() {
