@@ -133,8 +133,8 @@ extension <%= schema_name %> {
       <% end %>
 
       <% type.fields(include_deprecated: true).each do |field| %>
-        <%= swift_doc(field, false) %><%= swift_attributes(field) %>
-        open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_output_type(field.type) %> {
+        <%= swift_doc(field, false) %>
+        <%= swift_attributes(field) %>open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_output_type(field.type) %> {
           return internalGet<%= field.classify_name %>()
         }
 
