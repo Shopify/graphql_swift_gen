@@ -229,7 +229,7 @@ extension <%= schema_name %> {
           <% if field.type.non_null? %>
             <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %><%= seperator %>
           <% else %>
-            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %>? = nil<%= seperator %>
+            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %> = nil<%= seperator %>
           <% end %>
         <% end %>
       ) {
@@ -238,7 +238,7 @@ extension <%= schema_name %> {
         <% end %>
         <% type.optional_input_fields.each do |field| %>
           <% field_name = escape_reserved_word(field.camelize_name) %>
-          if let <%= field_name %> = <%= field_name %> {
+          if <%= field_name %> != nil {
             self.<%= field_name %>Seen = true
             self.<%= field_name %> = <%= field_name %>
           }
@@ -251,7 +251,7 @@ extension <%= schema_name %> {
           fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
         <% end %>
         <% type.optional_input_fields.each do |field| %>
-          if <%= escape_reserved_word(field.camelize_name) %>Seen {
+          if <%= escape_reserved_word(field.camelize_name) %>Seen || <%= escape_reserved_word(field.camelize_name) %> != nil {
             if let <%= escape_reserved_word(field.camelize_name) %> = <%= escape_reserved_word(field.camelize_name) %> {
               fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
             } else {
