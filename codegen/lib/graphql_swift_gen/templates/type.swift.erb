@@ -4,7 +4,7 @@ import Foundation
   import GraphQLSupport
 <% end %>
 
-<% if type.interface? || type.union? %>
+<% if type.interface? %>
   public protocol <%= type.name %> {
     var typeName: String { get }
     <% type.fields(include_deprecated: true).each do |field| %>
@@ -18,7 +18,7 @@ import Foundation
 <% end %>
 
 extension <%= schema_name %> {
-  <% case type.kind; when 'OBJECT', 'INTERFACE', 'UNION' %>
+  <% case type.kind; when 'OBJECT', 'INTERFACE' %>
     open class <%= type.name %>Query: GraphQL.AbstractQuery, GraphQLQuery {
       public typealias Response = <%= type.name %>
 
@@ -189,7 +189,7 @@ extension <%= schema_name %> {
           key in
             switch(key) {
             <% type.fields(include_deprecated: true).each do |field| %>
-              <% if %w(OBJECT INTERFACE UNION).include?(field.type.unwrap.kind) %>
+              <% if %w(OBJECT INTERFACE).include?(field.type.unwrap.kind) %>
                 case "<%= field.name %>":
                   <%= generate_append_objects_code("internalGet#{field.classify_name}()", field.type) %>
               <% end %>
@@ -269,6 +269,11 @@ extension <%= schema_name %> {
         case <%= escape_reserved_word(value.camelize_name) %> = "<%= value.name %>"
       <% end %>
       case unknownValue = ""
+    }
+  <% when 'UNION' %>
+    <% # FIXME: https://github.com/Shopify/graphql_swift_gen/issues/9 %>
+    /// <%= type.name %> not implemented: https://github.com/Shopify/graphql_swift_gen/issues/9
+    protocol <%= type.name%> {
     }
   <% else %>
     <% raise NotImplementedError, "unhandled #{type.kind} type #{type.name}" %>
