@@ -35,6 +35,18 @@ class IntegrationTests: XCTestCase {
         XCTAssertEqual(queryString, "{entry(key:\"user:1\"){__typename,ttl,... on StringEntry{value}}}")
     }
 
+    func testUnionQuery() {
+        let query = Generated.buildQuery { $0
+            .entryUnion(key: "user:1") { $0
+                .onStringEntry { $0
+                    .value()
+                }
+            }
+        }
+        let queryString = String(describing: query)
+        XCTAssertEqual(queryString, "{entry_union(key:\"user:1\"){__typename,... on StringEntry{value}}}")
+    }
+
     func testEnumInput() {
         let query = Generated.buildQuery { $0
             .keys(first: 10, type: .integer)
@@ -127,6 +139,20 @@ class IntegrationTests: XCTestCase {
         let entry = data.entry!
         XCTAssertEqual(entry.typeName, "FutureEntry")
         XCTAssertEqual(entry.key, "foo")
+    }
+
+    func testUnionResponse() {
+        let data = queryData(json: "{\"data\":{\"entry_union\":{\"__typename\":\"IntegerEntry\",\"value\":42}}}")
+        let entry = data.entryUnion!
+        XCTAssertEqual(entry.typeName, "IntegerEntry")
+        let intEntry = entry as! Generated.IntegerEntry
+        XCTAssertEqual(intEntry.value, 42)
+    }
+
+    func testUnionUnknownTypeResponse() {
+        let data = queryData(json: "{\"data\":{\"entry_union\":{\"__typename\":\"FutureEntry\"}}}")
+        let entry = data.entryUnion!
+        XCTAssertEqual(entry.typeName, "FutureEntry")
     }
 
     func testMutationResponse() {
