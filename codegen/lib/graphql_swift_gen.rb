@@ -257,4 +257,24 @@ class GraphQLSwiftGen
     end
     "@available(*, deprecated#{message_argument})"
   end
+
+  def swift_protocols(type)
+    return ", #{type.name}" unless type.object?
+    interfaces = abstract_types.fetch(type.name)
+    return "" if interfaces.empty?
+    ", #{interfaces.to_a.join(', ')}"
+  end
+
+  def abstract_types
+    @abstract_types ||= schema.types.each_with_object({}) do |type, result|
+      case type.kind
+      when 'OBJECT'
+        result[type.name] ||= Set.new
+      when 'INTERFACE', 'UNION'
+        type.possible_types.each do |possible_type|
+          (result[possible_type.name] ||= Set.new).add(type.name)
+        end
+      end
+    end
+  end
 end
