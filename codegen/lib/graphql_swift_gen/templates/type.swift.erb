@@ -231,12 +231,12 @@ extension <%= schema_name %> {
       public init(
         <% input_fields = type.required_input_fields + type.optional_input_fields # manually ordered with required fields first %>
         <% input_fields.each do |field| %>
-          <% seperator = field == input_fields.last ? "" : "," %>
+          <% separator = field == input_fields.last ? "" : "," %>
           <% if field.type.non_null? %>
-            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %><%= seperator %>
+            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %><%= separator %>
           <% else %>
             <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %> = nil,
-            serialize<%= escape_reserved_word(field.classify_name) %>: Bool = false<%= seperator %>
+            serialize<%= escape_reserved_word(field.classify_name) %>: Bool = false<%= separator %>
           <% end %>
         <% end %>
       ) {
