@@ -177,7 +177,7 @@ extension <%= schema_name %> {
       <% type.input_fields.each do |field| %>
       
        <%= swift_doc(field) %>
-       open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %>
+       open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, wrapped: true) %>
       <% end %>
       /// Creates the input object.
       ///
@@ -187,11 +187,13 @@ extension <%= schema_name %> {
       internal func serialize() -> String {
         var fields: [String] = []
         <% type.input_fields.each do |field| %>
-          <% unless field.type.non_null? %>
-            if let <%= escape_reserved_word(field.camelize_name) %> = <%= escape_reserved_word(field.camelize_name) %> {
-          <% end %>
-              fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
-          <% unless field.type.non_null? %>
+          <% if field.type.non_null? %>
+            fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
+          <% else %>
+            switch <%= escape_reserved_word(field.camelize_name) %> {
+            case .some(let <%= escape_reserved_word(field.camelize_name) %>): fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
+            case .null: fields.append("<%= field.name %>:null")
+            case .undefined: break
             }
           <% end %>
         <% end %>
