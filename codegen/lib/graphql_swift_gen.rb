@@ -113,20 +113,27 @@ class GraphQLSwiftGen
     Reformatter.new(indent: "\t").reformat(code)
   end
 
-  def swift_input_type(type, non_null: false)
+  def swift_input_type(type, non_null: false, wrapped: false)
     code = case type.kind
     when 'NON_NULL'
-      return swift_input_type(type.of_type, non_null: true)
+      return swift_input_type(type.of_type, non_null: true, wrapped: wrapped)
     when 'SCALAR'
       scalars[type.name].swift_type
     when 'LIST'
-      "[#{swift_input_type(type.of_type, non_null: true)}]"
+      "[#{swift_input_type(type.of_type, non_null: true, wrapped: wrapped)}]"
     when 'INPUT_OBJECT', 'ENUM'
       type.name
     else
       raise NotImplementedError, "Unhandled #{type.kind} input type"
     end
-    code += "?" unless non_null
+    
+    if wrapped 
+      if !non_null
+        code = "InputValue<#{code}>"
+      end
+    else
+      code += "?" unless non_null
+    end
     code
   end
 
@@ -228,8 +235,8 @@ class GraphQLSwiftGen
       input_fields.each do |field|
         text << escape_reserved_word(field.camelize_name)
         text << ": "
-        text << swift_input_type(field.type)
-        text << (field.type.non_null? ? "" : " = nil")
+        text << swift_input_type(field.type, wrapped: true)
+        text << (field.type.non_null? ? "" : " = .undefined")
         text << (field == input_fields.last ? "" : ", ")
       end
     text << ")"
