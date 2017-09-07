@@ -70,10 +70,10 @@ class IntegrationTests: XCTestCase {
 
     func testInputObjectExplictNilConstructor() {
         let query = Generated.buildMutation { $0
-            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: .some(nil)))
+            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: nil))
         }
         let queryString = String(describing: query)
-        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,negate:null})}")
+        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42})}")
     }
 
     func testInputObjectExplictNilSetLater() {

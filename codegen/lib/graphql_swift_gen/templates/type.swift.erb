@@ -214,15 +214,27 @@ extension <%= schema_name %> {
   <% when 'INPUT_OBJECT' %>
     open class <%= type.name %> {
       <% type.required_input_fields.each do |field| %>
-       open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %>
+
+       open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %>
       <% end %>
       <% type.optional_input_fields.each do |field| %>
+
         open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %> {
           didSet {
             <%= escape_reserved_word(field.camelize_name) %>Seen = true
           }
         }
+
+        // Observes if the <%= escape_reserved_word(field.camelize_name) %> property was set.
         private var <%= escape_reserved_word(field.camelize_name) %>Seen: Bool = false
+
+        // Unsets the <%= escape_reserved_word(field.camelize_name) %> property so that it is not serialized.
+        @discardableresult
+        open func unset<%= escape_reserved_word(field.classify_name) %>() -> <%= type.name %> {
+          <%= escape_reserved_word(field.camelize_name) %> = nil
+          <%= escape_reserved_word(field.camelize_name) %>Seen = false
+          return self
+        }
       <% end %>
 
       public init(
@@ -230,9 +242,9 @@ extension <%= schema_name %> {
         <% input_fields.each do |field| %>
           <% seperator = field == input_fields.last ? "" : "," %>
           <% if field.type.non_null? %>
-            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %><%= seperator %>
+            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %><%= seperator %>
           <% else %>
-            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %>? = nil<%= seperator %>
+            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %> = nil<%= seperator %>
           <% end %>
         <% end %>
       ) {
