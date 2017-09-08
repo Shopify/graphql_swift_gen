@@ -68,24 +68,6 @@ class IntegrationTests: XCTestCase {
         XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,negate:true})}")
     }
 
-    func testInputObjectExplictNilConstructor() {
-        let query = Generated.buildMutation { $0
-            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: .some(nil)))
-        }
-        let queryString = String(describing: query)
-        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,negate:null})}")
-    }
-
-    func testInputObjectExplictNilSetLater() {
-        let input = Generated.SetIntegerInput(key: "answer", value: 42)
-        input.negate = nil
-        let query = Generated.buildMutation { $0
-            .setInteger(input: input)
-        }
-        let queryString = String(describing: query)
-        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,negate:null})}")
-    }
-
     func testScalarInput() {
         let ttl = date(year: 2017, month: 1, day: 31, hour: 10, minute: 9, second: 48)
         let query = Generated.buildMutation { $0
