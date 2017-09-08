@@ -186,6 +186,15 @@ extension <%= schema_name %> {
       ///
       <%= input_field_description(type) %>
 	  <%= generate_input_init(type) %>
+	  
+	  <% if deprecated_input_init_required(type) %>
+	  <%= generate_private_input_init(type) %>
+	  <% end %>
+	  
+	  /// Creates the input object.
+      ///
+      <%= input_field_description(type) %>
+	  <%= generate_deprecated_input_init(type) %>
 
       internal func serialize() -> String {
         var fields: [String] = []
