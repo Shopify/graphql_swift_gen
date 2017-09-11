@@ -298,6 +298,38 @@ public struct SchemaViolationError: Error {
 	}
 }
 
+public enum InputValue<T> {
+    case some(T)
+    case null
+    case undefined
+    
+    public init(orNull optional: Optional<T>)  {
+        if let value = optional {
+            self = .some(value)
+        } else {
+            self = .null
+        }
+    }
+    
+    public init(orUndefined optional: Optional<T>)  {
+        if let value = optional {
+            self = .some(value)
+        } else {
+            self = .undefined
+        }
+    }
+}
+
+public extension Optional {
+    public var orNull: InputValue<Wrapped> {
+        return InputValue(orNull: self)
+    }
+    
+    public var orUndefined: InputValue<Wrapped> {
+        return InputValue(orUndefined: self)
+    }
+}
+
 extension GraphQL.Selection: Equatable {}
 public func ==(lhs: GraphQL.Selection, rhs: GraphQL.Selection) -> Bool {
 	return (lhs === rhs) || (lhs.field == rhs.field && lhs.alias == rhs.alias && lhs.args == rhs.args && lhs.subfields == rhs.subfields)

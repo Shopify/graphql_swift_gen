@@ -113,20 +113,27 @@ class GraphQLSwiftGen
     Reformatter.new(indent: "\t").reformat(code)
   end
 
-  def swift_input_type(type, non_null: false)
+  def swift_input_type(type, non_null: false, wrapped: false)
     code = case type.kind
     when 'NON_NULL'
-      return swift_input_type(type.of_type, non_null: true)
+      return swift_input_type(type.of_type, non_null: true, wrapped: wrapped)
     when 'SCALAR'
       scalars[type.name].swift_type
     when 'LIST'
-      "[#{swift_input_type(type.of_type, non_null: true)}]"
+      "[#{swift_input_type(type.of_type, non_null: true, wrapped: wrapped)}]"
     when 'INPUT_OBJECT', 'ENUM'
       type.name
     else
       raise NotImplementedError, "Unhandled #{type.kind} input type"
     end
-    code += "?" unless non_null
+    
+    if wrapped 
+      if !non_null
+        code = "InputValue<#{code}>"
+      end
+    else
+      code += "?" unless non_null
+    end
     code
   end
 
@@ -223,22 +230,90 @@ class GraphQLSwiftGen
   end
   
   def generate_input_init(type) 
-    text = "public init("
+    text = "public static func create("
+	input_fields = type.required_input_fields + type.optional_input_fields
+    input_fields.each do |field|
+      text << escape_reserved_word(field.camelize_name)
+      text << ": "
+      text << swift_input_type(field.type, wrapped: true)
+      text << (field.type.non_null? ? "" : " = .undefined")
+      text << (field == input_fields.last ? "" : ", ")
+    end
+      
+    text << ") -> #{type.name} {"
+    text << "\n"
+	text << "return #{type.name}("
+	text << input_fields.map { |field|
+	  "#{field.name}: #{field.name}"
+	}.join(", ")
+	text << ")\n"
+    text << "}"
+  end
+  
+  def deprecated_input_init_required(type)
+  	type.input_fields.each do |field|
+      unless field.type.non_null?
+        return true
+      end
+    end
+    false
+  end
+  
+  def generate_private_input_init(type) 
+    text = "private init("
+    input_fields = type.required_input_fields + type.optional_input_fields
+    input_fields.each do |field|
+      text << escape_reserved_word(field.camelize_name)
+      text << ": "
+      text << swift_input_type(field.type, wrapped: true)
+      text << (field.type.non_null? ? "" : " = .undefined")
+      text << (field == input_fields.last ? "" : ", ")
+    end
+    text << ")"
+    text << " {\n"
+      type.input_fields.each do |field|
+        name = escape_reserved_word(field.camelize_name)
+        text << "self." + name + " = " + name 
+        text << "\n"
+      end
+    text << "}"
+  end
+  
+  def generate_deprecated_input_init(type) 
+  	convenience = deprecated_input_init_required(type) ? "convenience " : ""
+  	deprecation = deprecated_input_init_required(type) ? "@available(*, deprecated)\n" : ""
+    text = "#{deprecation}public #{convenience}init("
       input_fields = type.required_input_fields + type.optional_input_fields
       input_fields.each do |field|
         text << escape_reserved_word(field.camelize_name)
         text << ": "
-        text << swift_input_type(field.type)
+        text << swift_input_type(field.type, wrapped: false)
         text << (field.type.non_null? ? "" : " = nil")
         text << (field == input_fields.last ? "" : ", ")
       end
     text << ")"
     text << " {\n"
-      type.input_fields.each do |field|
-        name = escape_reserved_word(field.camelize_name)
-        text << "self." + name + " = " + name
-        text << "\n"
-      end
+    
+      if deprecated_input_init_required(type)
+      	text << "self.init("
+		text << input_fields.map { |field|
+		  param = "#{field.name}: #{field.name}"
+		  if !field.type.non_null?
+			param << ".orNull"
+		  end
+		  param
+		}.join(", ")
+		text << ")\n"
+      else
+		type.input_fields.each do |field|
+		  name = escape_reserved_word(field.camelize_name)
+		  text << "self." + name + " = " + name 
+		  if !field.type.non_null?
+			text << ".orNull"
+		  end
+		  text << "\n"
+		end
+	  end
     text << "}"
   end
   
