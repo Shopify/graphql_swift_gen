@@ -1,4 +1,29 @@
-// Generated from <%= script_name %>
+//
+//  <%= type.name %>.swift
+//  Buy
+//
+//  Created by Shopify.
+//  Copyright (c) 2017 Shopify Inc. All rights reserved.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+//
+
 import Foundation
 <% if import_graphql_support %>
   import GraphQLSupport
@@ -9,20 +34,19 @@ import Foundation
 <% end %>
 
 <% if type.interface? || type.union? %>
+  <%= %>
+  <%= swift_doc(type) %>
   public protocol <%= type.name %> {
-    var typeName: String { get }
     <% fields.each do |field| %>
       <%= swift_attributes(field) %>
       var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_output_type(field.type) %> { get }
     <% end %>
-    func childResponseObjectMap() -> [GraphQL.AbstractResponse]
-
-    func responseObject() -> GraphQL.AbstractResponse
   }
 <% end %>
 
 extension <%= schema_name %> {
   <% case type.kind; when 'OBJECT', 'INTERFACE', 'UNION' %>
+    <%= swift_doc(type) %>
     open class <%= type.name %>Query: GraphQL.AbstractQuery, GraphQLQuery {
       public typealias Response = <%= type.name %>
 
@@ -32,8 +56,8 @@ extension <%= schema_name %> {
         }
       <% end %>
       <% fields.each do |field| %>
-        <%= swift_attributes(field) %>
-        @discardableResult
+		<%= swift_doc(field) %>
+        <%= swift_attributes(field) %>@discardableResult
         open func <%= escape_reserved_word(field.camelize_name) %>(<%= swift_arg_defs(field) %>) -> <%= type.name %>Query {
           <% unless field.args.empty? %>
             var args: [String] = []
@@ -57,7 +81,7 @@ extension <%= schema_name %> {
             subfields(subquery)
           <% end %>
 
-          addField(field: "<%= field.name %>", aliasSuffix: aliasSuffix<% unless field.args.empty? %>, args: argsString<% end %><% if field.subfields? %>, subfields: subquery<% end %>)
+          addField(field: "<%= field.name %>", aliasSuffix: alias<% unless field.args.empty? %>, args: argsString<% end %><% if field.subfields? %>, subfields: subquery<% end %>)
           return self
         }
       <% end %>
@@ -67,6 +91,7 @@ extension <%= schema_name %> {
           addField(field: "__typename")
         }
         <% type.possible_types.each do |possible_type| %>
+          <%= swift_doc(type) %>
           @discardableResult
           open func on<%= possible_type.name %>(subfields: (<%= possible_type.name %>Query) -> Void) -> <%= type.name %>Query {
             let subquery = <%= possible_type.name %>Query()
@@ -79,10 +104,11 @@ extension <%= schema_name %> {
     }
 
     <% class_name = type.object? ? type.name : "Unknown#{type.name}" %>
+    <%= swift_doc(type) %>
     open class <%= class_name %>: GraphQL.AbstractResponse, GraphQLObject<%= swift_protocols(type) %> {
       public typealias Query = <%= type.name %>Query
 
-      open override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
+      internal override func deserializeValue(fieldName: String, value: Any) throws -> Any? {
         let fieldValue = value
         switch fieldName {
           <% fields.each do |field| %>
@@ -94,19 +120,14 @@ extension <%= schema_name %> {
         }
       }
 
-      <% if type.object? %>
-        open var typeName: String { return "<%= type.name %>" }
-      <% else %>
-        open var typeName: String { return field(field: "__typename") as! String }
-
-        open static func create(fields: [String: Any]) throws -> <%= type.name %> {
+      <% unless type.object? %>
+        internal static func create(fields: [String: Any]) throws -> <%= type.name %> {
           guard let typeName = fields["__typename"] as? String else {
             throw SchemaViolationError(type: <%= class_name %>.self, field: "__typename", value: fields["__typename"] ?? NSNull())
           }
           switch typeName {
             <% type.possible_types.each do |possible_type| %>
-              case "<%= possible_type.name %>":
-                return try <%= possible_type.name %>.init(fields: fields)
+              case "<%= possible_type.name %>": return try <%= possible_type.name %>.init(fields: fields)
             <% end %>
             default:
               return try <%= class_name %>.init(fields: fields)
@@ -115,82 +136,28 @@ extension <%= schema_name %> {
       <% end %>
 
       <% fields.each do |field| %>
-        <%= swift_attributes(field) %>
-        open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_output_type(field.type) %> {
+        <%= swift_doc(field, false) %>
+        <%= swift_attributes(field) %>open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_output_type(field.type) %> {
           return internalGet<%= field.classify_name %>()
         }
 
         <% unless field.args.empty? %>
           <%= swift_attributes(field) %>
-          open func aliased<%= field.classify_name %>(aliasSuffix: String) -> <%= swift_output_type(field.type) %> {
-            return internalGet<%= field.classify_name %>(aliasSuffix: aliasSuffix)
+          open func aliased<%= field.classify_name %>(alias: String) -> <%= swift_output_type(field.type) %> {
+            return internalGet<%= field.classify_name %>(alias: alias)
           }
         <% end %>
 
-        func internalGet<%= field.classify_name %>(aliasSuffix: String? = nil) -> <%= swift_output_type(field.type) %> {
-          return field(field: "<%= field.name %>", aliasSuffix: aliasSuffix) as! <%= swift_output_type(field.type) %>
+        func internalGet<%= field.classify_name %>(alias: String? = nil) -> <%= swift_output_type(field.type) %> {
+          return field(field: "<%= field.name %>", aliasSuffix: alias) as! <%= swift_output_type(field.type) %>
         }
       <% end %>
 
-      override open func childObjectType(key: String) -> GraphQL.ChildObjectType {
-        switch(key) {
-        <% fields.each do |field| %>
-          case "<%= field.name %>":
-          <% case field.type.unwrap_non_null.kind
-          when 'OBJECT', 'INTERFACE' %>
-            return .object
-          <% when 'LIST' %>
-            <% case field.type.unwrap.kind
-            when 'OBJECT', 'INTERFACE' %>
-            return .objectList
-            <% else %>
-            return .scalarList
-            <% end %>
-          <% else %>
-            return .scalar
-          <% end %>
-        <% end %>
-          default:
-            return .scalar
-        }
-      }
-
-      override open func fetchChildObject(key: String) -> GraphQL.AbstractResponse? {
-        switch(key) {
-        <% fields.each do |field| %>
-          <% if field.type.unwrap_non_null.kind == 'OBJECT' %>
-          case "<%= field.name %>":
-            return internalGet<%= field.classify_name %>()
-          <% elsif field.type.unwrap_non_null.kind == 'INTERFACE' %>
-          case "<%= field.name %>":
-            return internalGet<%= field.classify_name %>()<%= field.type.non_null? ? '' : '?' %>.responseObject()
-          <% end %>
-        <% end %>
-          default:
-            break
-        }
-        return nil
-      }
-
-      override open func fetchChildObjectList(key: String) -> [GraphQL.AbstractResponse] {
-        switch(key) {
-          <% fields.each do |field| %>
-            <% if field.type.unwrap_non_null.kind == 'LIST' && field.type.unwrap.kind == 'OBJECT' %>
-              case "<%= field.name %>":
-                return internalGet<%= field.classify_name %>()<% if !field.type.non_null? %> ?? []<% end %>
-              <% end %>
-          <% end %>
-              default:
-                return []
-        }
-      }
-
-      open func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {
+      internal override func childResponseObjectMap() -> [GraphQL.AbstractResponse]  {
         <% if fields.any? { |field| ['OBJECT', 'INTERFACE'].include?(field.type.unwrap_non_null.kind) } %>
           var response: [GraphQL.AbstractResponse] = []
-          objectMap.keys.forEach({
-          key in
-            switch(key) {
+          objectMap.keys.forEach {
+            switch($0) {
             <% fields.each do |field| %>
               <% if %w(OBJECT INTERFACE UNION).include?(field.type.unwrap.kind) %>
                 case "<%= field.name %>":
@@ -200,37 +167,27 @@ extension <%= schema_name %> {
             default:
               break
             }
-          })
+          }
           return response
         <% else %>
           return []
         <% end %>
       }
-
-      open func responseObject() -> GraphQL.AbstractResponse {
-        return self as GraphQL.AbstractResponse
-      }
     }
   <% when 'INPUT_OBJECT' %>
+    <%= swift_doc(type) %>
     open class <%= type.name %> {
       <% type.input_fields.each do |field| %>
+      
+       <%= swift_doc(field) %>
        open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %>
       <% end %>
+      /// Creates the input object.
+      ///
+      <%= input_field_description(type) %>
+	  <%= generate_input_init(type) %>
 
-      public init(
-        <% input_fields = type.required_input_fields + type.optional_input_fields %>
-        <% input_fields.each do |field| %>
-          <% default = field.type.non_null? ? "" : " = nil" %>
-          <% seperator = field == input_fields.last ? "" : "," %>
-          <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %><%= default %><%= seperator %>
-        <% end %>
-      ) {
-        <% type.input_fields.each do |field| %>
-          self.<%= escape_reserved_word(field.camelize_name) %> = <%= escape_reserved_word(field.camelize_name) %>
-        <% end %>
-      }
-
-      func serialize() -> String {
+      internal func serialize() -> String {
         var fields: [String] = []
         <% type.input_fields.each do |field| %>
           <% unless field.type.non_null? %>
@@ -245,10 +202,11 @@ extension <%= schema_name %> {
       }
     }
   <% when 'ENUM' %>
+    <%= swift_doc(type) %>
     public enum <%= type.name %>: String {
       <% type.enum_values(include_deprecated: true).each do |value| %>
-        <%= swift_attributes(value) %>
-        case <%= escape_reserved_word(value.camelize_name) %> = "<%= value.name %>"
+		<%= swift_doc(value) %>
+        <%= swift_attributes(value) %>case <%= escape_reserved_word(value.camelize_name) %> = "<%= value.name %>"
       <% end %>
       case unknownValue = ""
     }
