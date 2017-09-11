@@ -2,5 +2,3 @@
 /Gemfile.lock
 /pkg/
 /tmp/
-/support/Tests/GraphQLSupportTests/Generated.swift
-/support/Tests/GraphQLSupportTests/Generated/
