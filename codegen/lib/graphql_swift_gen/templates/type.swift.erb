@@ -87,10 +87,10 @@ extension <%= schema_name %> {
         switch fieldName {
           <% fields.each do |field| %>
             case "<%= field.name %>":
-              <%= deserialize_value_code(field.name, 'value', field.type) %>
+              <%= deserialize_value_code(class_name, field.name, 'value', field.type) %>
           <% end %>
           default:
-            throw SchemaViolationError(type: type(of: self), field: fieldName, value: fieldValue)
+            throw SchemaViolationError(type: <%= class_name %>.self, field: fieldName, value: fieldValue)
         }
       }
 

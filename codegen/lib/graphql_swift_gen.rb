@@ -187,7 +187,7 @@ class GraphQLSwiftGen
     end
   end
 
-  def deserialize_value_code(field_name, expr, type, untyped: true)
+  def deserialize_value_code(class_name, field_name, expr, type, untyped: true)
     statements = ""
 
     if untyped
@@ -195,7 +195,7 @@ class GraphQLSwiftGen
       statements << "if #{expr} is NSNull { return nil }\n" unless type.non_null?
       statements << <<-SWIFT
         guard let value = #{expr} as? #{json_type} else {
-          throw SchemaViolationError(type: type(of: self), field: fieldName, value: fieldValue)
+          throw SchemaViolationError(type: #{class_name}.self, field: fieldName, value: fieldValue)
         }
       SWIFT
       expr = 'value'
@@ -208,7 +208,7 @@ class GraphQLSwiftGen
     when 'LIST'
       untyped = !type.of_type.non_null?
       rethrow = "try " if %w(OBJECT INTERFACE UNION).include?(type.unwrap.kind) || untyped
-      sub_statements = "#{rethrow}#{expr}.map { #{deserialize_value_code(field_name, '$0', type.of_type, untyped: untyped)} }"
+      sub_statements = "#{rethrow}#{expr}.map { #{deserialize_value_code(class_name, field_name, '$0', type.of_type, untyped: untyped)} }"
       sub_statements += " as [Any?]" if untyped
       sub_statements
     when 'OBJECT'
