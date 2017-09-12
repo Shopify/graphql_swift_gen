@@ -299,13 +299,19 @@ public struct SchemaViolationError: Error {
 }
 
 public enum Input<T> {
+    
+    /// An input value. If nil, the value will still be serialized and sent
     case value(T?)
+    
+    /// An undefined value. Undefined values are not serialized and won't be sent
     case undefined
     
+    /// Creates a `.value(T)` or `.value(nil)` if `optional` is nil.
     public init(orNull optional: Optional<T>)  {
         self = .value(optional)
     }
     
+    /// Creates a `.value(T)` or `.undefined` if the `optional` is nil.
     public init(orUndefined optional: Optional<T>)  {
         if let value = optional {
             self = .value(value)
