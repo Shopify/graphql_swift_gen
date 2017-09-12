@@ -129,7 +129,7 @@ class GraphQLSwiftGen
     
     if wrapped 
       if !non_null
-        code = "InputValue<#{code}>"
+        code = "Input<#{code}>"
       end
     else
       code += "?" unless non_null

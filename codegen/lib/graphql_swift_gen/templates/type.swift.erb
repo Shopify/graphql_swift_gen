@@ -202,9 +202,14 @@ extension <%= schema_name %> {
           <% if field.type.non_null? %>
             fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
           <% else %>
-            switch <%= escape_reserved_word(field.camelize_name) %> {
-            case .some(let <%= escape_reserved_word(field.camelize_name) %>): fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
-            case .null: fields.append("<%= field.name %>:null")
+            <% escapedField = escape_reserved_word(field.camelize_name) %>
+            switch <%= escapedField %> {
+            case .value(let <%= escapedField %>): 
+                guard let <%= escapedField %> = <%= escapedField %> else {
+                    fields.append("<%= field.name %>:null")
+                    break
+            	}
+             	fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
             case .undefined: break
             }
           <% end %>

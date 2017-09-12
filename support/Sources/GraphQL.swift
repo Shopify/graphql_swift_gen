@@ -298,35 +298,20 @@ public struct SchemaViolationError: Error {
 	}
 }
 
-public enum InputValue<T> {
-    case some(T)
-    case null
+public enum Input<T> {
+    case value(T?)
     case undefined
     
     public init(orNull optional: Optional<T>)  {
-        if let value = optional {
-            self = .some(value)
-        } else {
-            self = .null
-        }
+        self = .value(optional)
     }
     
     public init(orUndefined optional: Optional<T>)  {
         if let value = optional {
-            self = .some(value)
+            self = .value(value)
         } else {
             self = .undefined
         }
-    }
-}
-
-public extension Optional {
-    public var orNull: InputValue<Wrapped> {
-        return InputValue(orNull: self)
-    }
-    
-    public var orUndefined: InputValue<Wrapped> {
-        return InputValue(orUndefined: self)
     }
 }
 
