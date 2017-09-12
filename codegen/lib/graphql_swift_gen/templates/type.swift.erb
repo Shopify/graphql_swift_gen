@@ -217,7 +217,7 @@ extension <%= schema_name %> {
        open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %>
       <% end %>
       <% type.optional_input_fields.each do |field| %>
-        open var <%= escape_reserved_word(field.camelize_name) %>: InputValue<<%= swift_input_type(field.type, non_null: true) %>>
+        open var <%= escape_reserved_word(field.camelize_name) %>: Input<<%= swift_input_type(field.type, non_null: true) %>>
       <% end %>
 
       public init(
@@ -227,7 +227,7 @@ extension <%= schema_name %> {
           <% if field.type.non_null? %>
             <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %><%= seperator %>
           <% else %>
-            <%= escape_reserved_word(field.camelize_name) %>: InputValue<<%= swift_input_type(field.type, non_null: true) %>> = .undefined<%= seperator %>
+            <%= escape_reserved_word(field.camelize_name) %>: Input<<%= swift_input_type(field.type, non_null: true) %>> = .undefined<%= seperator %>
           <% end %>
         <% end %>
       ) {
@@ -243,7 +243,7 @@ extension <%= schema_name %> {
         <% end %>
         <% type.optional_input_fields.each do |field| %>
           switch <%= escape_reserved_word(field.camelize_name) %> {
-          case .defined(let <%= escape_reserved_word(field.camelize_name) %>):
+          case .value(let <%= escape_reserved_word(field.camelize_name) %>):
             if let <%= escape_reserved_word(field.camelize_name) %> = <%= escape_reserved_word(field.camelize_name) %> {
               fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
             } else {

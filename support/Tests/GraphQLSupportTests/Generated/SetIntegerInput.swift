@@ -9,18 +9,18 @@ extension Generated {
 
 		open var value: Int32
 
-		open var ttl: InputValue<Date>
+		open var ttl: Input<Date>
 
-		open var negate: InputValue<Bool>
+		open var negate: Input<Bool>
 
 		public init(
 			key: String,
 
 			value: Int32,
 
-			ttl: InputValue<Date> = .undefined,
+			ttl: Input<Date> = .undefined,
 
-			negate: InputValue<Bool> = .undefined
+			negate: Input<Bool> = .undefined
 		) {
 			self.key = key
 
@@ -39,7 +39,7 @@ extension Generated {
 			fields.append("value:\(value)")
 
 			switch ttl {
-				case .defined(let ttl):
+				case .value(let ttl):
 				if let ttl = ttl {
 					fields.append("ttl:\(GraphQL.quoteString(input: "\(iso8601DateParser.string(from: ttl))"))")
 				} else {
@@ -49,7 +49,7 @@ extension Generated {
 			}
 
 			switch negate {
-				case .defined(let negate):
+				case .value(let negate):
 				if let negate = negate {
 					fields.append("negate:\(negate)")
 				} else {

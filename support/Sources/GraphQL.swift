@@ -294,15 +294,15 @@ public struct SchemaViolationError: Error {
 	}
 }
 
-public enum InputValue<T> {
+public enum Input<T> {
 	// Serialzeable value
-    case defined(T?)
+    case value(T?)
 	// Not serializable
     case undefined
     
     public init(orUndefined optional: Optional<T>)  {
         if let value = optional {
-            self = .defined(value)
+            self = .value(value)
         } else {
             self = .undefined
         }
