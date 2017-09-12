@@ -213,16 +213,22 @@ extension <%= schema_name %> {
     }
   <% when 'INPUT_OBJECT' %>
     open class <%= type.name %> {
-      <% type.input_fields.each do |field| %>
-       open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %>
+      <% type.required_input_fields.each do |field| %>
+       open var <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %>
+      <% end %>
+      <% type.optional_input_fields.each do |field| %>
+        open var <%= escape_reserved_word(field.camelize_name) %>: InputValue<<%= swift_input_type(field.type, non_null: true) %>>
       <% end %>
 
       public init(
         <% input_fields = type.required_input_fields + type.optional_input_fields %>
         <% input_fields.each do |field| %>
-          <% default = field.type.non_null? ? "" : " = nil" %>
           <% seperator = field == input_fields.last ? "" : "," %>
-          <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type) %><%= default %><%= seperator %>
+          <% if field.type.non_null? %>
+            <%= escape_reserved_word(field.camelize_name) %>: <%= swift_input_type(field.type, non_null: true) %><%= seperator %>
+          <% else %>
+            <%= escape_reserved_word(field.camelize_name) %>: InputValue<<%= swift_input_type(field.type, non_null: true) %>> = .undefined<%= seperator %>
+          <% end %>
         <% end %>
       ) {
         <% type.input_fields.each do |field| %>
@@ -232,14 +238,19 @@ extension <%= schema_name %> {
 
       func serialize() -> String {
         var fields: [String] = []
-        <% type.input_fields.each do |field| %>
-          <% unless field.type.non_null? %>
+        <% type.required_input_fields.each do |field| %>
+          fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
+        <% end %>
+        <% type.optional_input_fields.each do |field| %>
+          switch <%= escape_reserved_word(field.camelize_name) %> {
+          case .defined(let <%= escape_reserved_word(field.camelize_name) %>):
             if let <%= escape_reserved_word(field.camelize_name) %> = <%= escape_reserved_word(field.camelize_name) %> {
-          <% end %>
               fields.append("<%= field.name %>:<%= generate_build_input_code(field.camelize_name, field.type.unwrap_non_null) %>")
-          <% unless field.type.non_null? %>
+            } else {
+              fields.append("<%= field.name %>:null")
             }
-          <% end %>
+          case .undefined: break
+          }
         <% end %>
         return "{\(fields.joined(separator: ","))}"
       }

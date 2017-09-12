@@ -9,42 +9,26 @@ extension Generated {
 
 		open var value: Int32
 
-		open var ttl: Date? {
-			didSet {
-				ttlSeen = true
-			}
-		}
-		private var ttlSeen: Bool = false
+		open var ttl: InputValue<Date>
 
-		open var negate: Bool? {
-			didSet {
-				negateSeen = true
-			}
-		}
-		private var negateSeen: Bool = false
+		open var negate: InputValue<Bool>
 
 		public init(
 			key: String,
 
 			value: Int32,
 
-			ttl: Date?? = nil,
+			ttl: InputValue<Date> = .undefined,
 
-			negate: Bool?? = nil
+			negate: InputValue<Bool> = .undefined
 		) {
 			self.key = key
 
 			self.value = value
 
-			if let ttl = ttl {
-				self.ttlSeen = true
-				self.ttl = ttl
-			}
+			self.ttl = ttl
 
-			if let negate = negate {
-				self.negateSeen = true
-				self.negate = negate
-			}
+			self.negate = negate
 		}
 
 		func serialize() -> String {
@@ -54,20 +38,24 @@ extension Generated {
 
 			fields.append("value:\(value)")
 
-			if ttlSeen {
+			switch ttl {
+				case .defined(let ttl):
 				if let ttl = ttl {
 					fields.append("ttl:\(GraphQL.quoteString(input: "\(iso8601DateParser.string(from: ttl))"))")
 				} else {
 					fields.append("ttl:null")
 				}
+				case .undefined: break
 			}
 
-			if negateSeen {
+			switch negate {
+				case .defined(let negate):
 				if let negate = negate {
 					fields.append("negate:\(negate)")
 				} else {
 					fields.append("negate:null")
 				}
+				case .undefined: break
 			}
 
 			return "{\(fields.joined(separator: ","))}"

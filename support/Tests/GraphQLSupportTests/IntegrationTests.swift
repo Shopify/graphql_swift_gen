@@ -62,16 +62,50 @@ class IntegrationTests: XCTestCase {
 
     func testInputObject() {
         let query = Generated.buildMutation { $0
-            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: true))
+            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: InputValue(orUndefined: true)))
         }
         let queryString = String(describing: query)
         XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,negate:true})}")
     }
 
+    func testInputObjectExplicitUndefined() {
+        let query = Generated.buildMutation { $0
+            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: .undefined))
+        }
+        let queryString = String(describing: query)
+        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42})}")
+    }
+
+    func testInputObjectOrUndefined() {
+        let query = Generated.buildMutation { $0
+            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: InputValue(orUndefined: nil)))
+        }
+        let queryString = String(describing: query)
+        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42})}")
+    }
+
+    func testInputObjectExplictNullConstructor() {
+        let query = Generated.buildMutation { $0
+            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, negate: .defined(nil)))
+        }
+        let queryString = String(describing: query)
+        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,negate:null})}")
+    }
+
+    func testInputObjectExplictNullSetLater() {
+        let input = Generated.SetIntegerInput(key: "answer", value: 42)
+        input.negate = .defined(nil)
+        let query = Generated.buildMutation { $0
+            .setInteger(input: input)
+        }
+        let queryString = String(describing: query)
+        XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,negate:null})}")
+    }
+
     func testScalarInput() {
         let ttl = date(year: 2017, month: 1, day: 31, hour: 10, minute: 9, second: 48)
         let query = Generated.buildMutation { $0
-            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, ttl: ttl))
+            .setInteger(input: Generated.SetIntegerInput(key: "answer", value: 42, ttl: .defined(ttl)))
         }
         let queryString = String(describing: query)
         XCTAssertEqual(queryString, "mutation{set_integer(input:{key:\"answer\",value:42,ttl:\"2017-01-31T10:09:48Z\"})}")
