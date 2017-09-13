@@ -294,6 +294,21 @@ public struct SchemaViolationError: Error {
 	}
 }
 
+public enum Input<T> {
+	// Serialzeable value
+    case value(T?)
+	// Not serializable
+    case undefined
+    
+    public init(orUndefined optional: Optional<T>)  {
+        if let value = optional {
+            self = .value(value)
+        } else {
+            self = .undefined
+        }
+    }
+}
+
 extension GraphQL.Selection: Equatable {}
 public func ==(lhs: GraphQL.Selection, rhs: GraphQL.Selection) -> Bool {
 	return (lhs === rhs) || (lhs.field == rhs.field && lhs.alias == rhs.alias && lhs.args == rhs.args && lhs.subfields == rhs.subfields)
