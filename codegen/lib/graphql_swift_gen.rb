@@ -281,7 +281,7 @@ class GraphQLSwiftGen
   
   def generate_deprecated_input_init(type) 
   	convenience = deprecated_input_init_required(type) ? "convenience " : ""
-  	deprecation = deprecated_input_init_required(type) ? "@available(*, deprecated)\n" : ""
+  	deprecation = deprecated_input_init_required(type) ? "@available(*, deprecated, message: \"Use the static create() method instead.\")\n" : ""
     text = "#{deprecation}public #{convenience}init("
       input_fields = type.required_input_fields + type.optional_input_fields
       input_fields.each do |field|
