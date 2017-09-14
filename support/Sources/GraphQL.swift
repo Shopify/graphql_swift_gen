@@ -298,12 +298,25 @@ public struct SchemaViolationError: Error {
 	}
 }
 
+/// A wrapper for values used in input objects.
+///
+/// An input, for example Input<String>, represents a nullable value
+/// in an object passed into a mutation request. It represents two
+/// main states of a value:
+///
+///   1. `.value(T?)` - A value, `T`, or `nil` will **always** be serialized in the request
+///   2. `.undefined` - No value will be serialized in the request
+///
+/// Being able to control when a value is serialized or not makes it
+/// possible to ommit `nil` values or include `nil` values in the
+/// serialization of the request.
+///
 public enum Input<T> {
     
-    /// An input value. If nil, the value will still be serialized and sent
+    /// An input value or `nil`. It will **always** be serialized in the request, even if `nil`.
     case value(T?)
     
-    /// An undefined value. Undefined values are not serialized and won't be sent
+    /// An undefined value; no value is provided. It will **never** be serialized in the request.
     case undefined
     
     /// Creates a `.value(T)` or `.value(nil)` if `optional` is nil.
