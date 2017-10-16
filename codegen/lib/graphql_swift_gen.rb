@@ -299,7 +299,7 @@ class GraphQLSwiftGen
 		text << input_fields.map { |field|
 		  param = "#{field.name}: #{field.name}"
 		  if !field.type.non_null?
-			param << ".orNull"
+			param << ".orUndefined"
 		  end
 		  param
 		}.join(", ")
@@ -309,7 +309,7 @@ class GraphQLSwiftGen
 		  name = escape_reserved_word(field.camelize_name)
 		  text << "self." + name + " = " + name 
 		  if !field.type.non_null?
-			text << ".orNull"
+			text << ".orUndefined"
 		  end
 		  text << "\n"
 		end
