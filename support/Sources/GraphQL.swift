@@ -187,7 +187,7 @@ public class GraphQL {
 		internal func fieldName(from key: String) -> String {
 			if let range = key.range(of: AbstractQuery.aliasSuffixSeparator) {
 				if key.distance(from: key.startIndex, to: range.lowerBound) > 0 {
-					return key.substring(to: range.lowerBound)
+					return String(key[..<range.lowerBound])
 				}
 			}
 			return key
