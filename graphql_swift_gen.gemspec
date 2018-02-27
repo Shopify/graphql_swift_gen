@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/Shopify/graphql_swift_gen"
   spec.license       = "MIT"
 
-  spec.files         = `git ls-files -z codegen/lib LICENSE.txt README.md`.split("\x0")
+  spec.files         = Dir.glob("codegen/lib/**/*") + %w(LICENSE.txt README.md)
   spec.require_paths = ["codegen/lib"]
 
   spec.required_ruby_version = ">= 2.1.0"
