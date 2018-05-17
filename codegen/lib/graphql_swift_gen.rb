@@ -4,16 +4,18 @@ require 'graphql_swift_gen/scalar'
 require 'erb'
 
 class GraphQLSwiftGen
-  SUPPORTING_FILES_PATH = File.expand_path('../../../support/Sources', __FILE__)
-  attr_reader :schema, :scalars, :script_name, :schema_name, :import_graphql_support
 
-  def initialize(schema, custom_scalars: [], nest_under:, script_name: 'graphql_swift_gen gem', import_graphql_support: false)
+  SUPPORTING_FILES_PATH = File.expand_path('../../../support/Sources', __FILE__)
+  attr_reader :schema, :scalars, :script_name, :schema_name, :import_graphql_support, :include_deprecation_warnings
+
+  def initialize(schema, custom_scalars: [], nest_under:, script_name: 'graphql_swift_gen gem', import_graphql_support: false, include_deprecation_warnings: true)
     @schema = schema
     @schema_name = nest_under
     @script_name = script_name
     @scalars = (BUILTIN_SCALARS + custom_scalars).reduce({}) { |hash, scalar| hash[scalar.type_name] = scalar; hash }
     @scalars.default_proc = ->(hash, key) { DEFAULT_SCALAR }
     @import_graphql_support = import_graphql_support
+    @include_deprecation_warnings = include_deprecation_warnings
   end
 
   def save(path)
@@ -255,7 +257,7 @@ class GraphQLSwiftGen
   end
 
   def swift_attributes(deprecatable)
-    return unless deprecatable.deprecated?
+    return unless @include_deprecation_warnings && deprecatable.deprecated?
     if deprecatable.deprecation_reason
       message_argument = ", message:#{deprecatable.deprecation_reason.inspect}"
     end
