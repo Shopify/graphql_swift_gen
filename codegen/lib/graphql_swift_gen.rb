@@ -4,6 +4,7 @@ require 'graphql_swift_gen/scalar'
 require 'erb'
 
 class GraphQLSwiftGen
+  SUPPORTING_FILES_PATH = File.expand_path('../../../support/Sources', __FILE__)
   attr_reader :schema, :scalars, :script_name, :schema_name, :import_graphql_support
 
   def initialize(schema, custom_scalars: [], nest_under:, script_name: 'graphql_swift_gen gem', import_graphql_support: false)
@@ -17,13 +18,16 @@ class GraphQLSwiftGen
 
   def save(path)
     output = generate
+    destination = "#{path}/#{schema_name}"
     begin
-      Dir.mkdir("#{path}/#{schema_name}")
+      Dir.mkdir(destination)
     rescue Errno::EEXIST
     end
     output.each do |relative_path, file_contents|
       File.write("#{path}/#{relative_path}", file_contents)
     end
+
+    FileUtils.cp_r "#{SUPPORTING_FILES_PATH}/.", "#{destination}"
   end
 
   def generate
