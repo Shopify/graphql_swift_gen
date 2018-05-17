@@ -21,6 +21,18 @@ class GraphQLSwiftGenTest < Minitest::Test
     refute_empty GraphQLSwiftGen.new(LARGER_SCHEMA, **required_args).generate
   end
 
+  def test_no_deprecation_messages
+    GraphQLSwiftGen.new(LARGER_SCHEMA, script_name: 'script/update_schema', include_deprecation_warnings: false, **required_args) do |output|
+      refute output.include?("deprecated")
+    end
+  end
+
+  def test_deprecation_messages
+    GraphQLSwiftGen.new(LARGER_SCHEMA, script_name: 'script/update_schema', include_deprecation_warnings: false, **required_args) do |output|
+      assert output.include?("deprecated")
+    end
+  end
+
   private
 
   def required_args
