@@ -24,9 +24,9 @@
 //  THE SOFTWARE.
 //
 
-open class <%= schema_name %> {
+public class <%= schema_name %> {
   <% [['Query', schema.query_root_name], ['Mutation', schema.mutation_root_name]].each do |operation_type, root_name| %>
-   open static func build<%= operation_type %>(_ subfields: (<%= root_name %>Query) -> Void) -> <%= root_name %>Query {
+   public static func build<%= operation_type %>(_ subfields: (<%= root_name %>Query) -> Void) -> <%= root_name %>Query {
       let root = <%= root_name %>Query()
       subfields(root)
       return root
