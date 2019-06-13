@@ -345,7 +345,7 @@ public func ==(lhs: GraphQL.AbstractQuery, rhs: GraphQL.AbstractQuery) -> Bool {
 }
 
 extension GraphQL.AbstractQuery: Hashable {
-	public var hashValue: Int {
-		return selections.description.hashValue
-	}
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(selections.description)
+    }
 }
